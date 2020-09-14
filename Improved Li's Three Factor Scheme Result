@@ -1,0 +1,95 @@
+contral start
+ Linux
+ responce start
+
+ Proverif. Cryptographic protocol verifier, by Bruno Blanchet, Vincent Cheval, and Marc Sylvestre
+ -test 		display a bit more information for debugging
+ -in <format> 		choose the input format (horn, horntype, spass, pi, pitype)
+ -out <format> 	choose the output format (solve, spass)
+ -o <filename> 	choose the output file name (for spass output)
+ -lib <filename> 	choose the library file (for pitype front-end only)
+ -TulaFale <version> 	indicate the version of TulaFale when ProVerif is used inside TulaFale
+ -graph 			create the trace graph from the dot file in the directory specified
+ -commandLineGraph 			Define the command for the creation of the graph trace from the dot file
+ -gc 			display gc statistics
+ -color 			use ANSI color codes
+ -html 			HTML display
+ -help  Display this list of options
+ --help  Display this list of options
+ Linear part:
+ DP(x_46,pk(y_47)) = DP(y_47,pk(x_46))
+ exp(exp(g,x_48),y_49) = exp(exp(g,y_49),x_48)
+ Completing equations...
+ Completed equations:
+ exp(exp(g,x_48),y_49) = exp(exp(g,y_49),x_48)
+ DP(x_46,pk(y_47)) = DP(y_47,pk(x_46))
+ Convergent part:
+ Completing equations...
+ Completed equations:
+ Process:
+ {1}new Bi_134: bioInfo;
+ {2}new PWi_135: bitstring;
+ {3}let Ri_136: bitstring = BH(Bi_134) in
+ {4}let Pi_137: bitstring = BH1(Bi_134) in
+ {5}let RPWi_138: bitstring = h(Concat(PWi_135,Ri_136)) in
+ {6}let Ai_139: bitstring = h(Concat1(Concat(IDi,Ni),x)) in
+ {7}let Xi_140: bitstring = h(Ai_139) in
+ {8}let Vi_141: bitstring = XOR(Ai_139,h(Concat(Concat(IDi,Ni),RPWi_138))) in
+ {9}let Zi_142: bitstring = h(Concat(Concat(Concat2(Concat(Concat(Concat(Pi_137,Ni),Xi_140),Vi_141),Y),IDi),RPWi_138)) in
+ (
+ {10}!
+ {11}let Ri_143: bitstring = BH(Bi_134) in
+ {12}let Pi_144: bitstring = BH1(Bi_134) in
+ {13}let RPWi_145: bitstring = h(Concat(PWi_135,Ri_143)) in
+ {14}let ZiEx_146: bitstring = h(Concat(Concat(Concat2(Concat(Concat(Concat(Pi_144,Ni),Xi),Vi_141),Y),IDi),RPWi_145)) in
+ {15}if (ZiEx_146 = Zi) then
+ {16}let Ai_147: bitstring = XORagain(Vi_141,h(Concat(Concat(IDi,Ni),RPWi_145))) in
+ {17}let XiEx_148: bitstring = h(Ai_147) in
+ {18}if (XiEx_148 = Xi) then
+ {19}event smAcUser(user);
+ {20}new a_149: exponent;
+ {21}let Y_150: bitstring = exp(g,y) in
+ {22}let CIDi_151: bitstring = XOR(exp(Y_150,a_149),IDi) in
+ {23}let C1_152: bitstring = h(Concat(Concat(exp(g,a_149),Ai_147),T1)) in
+ {24}out(c, (exp(g,a_149),CIDi_151,C1_152,T1));
+ {25}in(c, (Gb_153: bitstring,C2_154: bitstring,T2_155: bitstring,SC_156: bitstring));
+ {26}if (checksign(SC_156,pk(x)) = C2_154) then
+ {27}let C2Ex_157: bitstring = h(Concat(Concat(Ai_147,Gb_153),T2_155)) in
+ {28}if (C2Ex_157 = C2_154) then
+ {29}let SK_158: bitstring = h(Concat(Concat(Concat(exp(Gb_153,a_149),Ai_147),T1),T2_155)) in
+ {30}event userAcServer(server)
+ ) | (
+ {31}!
+ {32}in(c, (Ga_159: bitstring,CIDi_160: bitstring,C1_161: bitstring,T1_162: bitstring));
+ {33}new b_163: exponent;
+ {34}let IDi_164: bitstring = XORagain(CIDi_160,exp(Ga_159,y)) in
+ {35}let Ai_165: bitstring = h(Concat1(Concat(IDi_164,Ni),x)) in
+ {36}let C1Ex: bitstring = h(Concat(Concat(Ga_159,Ai_165),T1_162)) in
+ {37}if (C1Ex = C1_161) then
+ {38}event serverAcUser(user);
+ {39}let C2_166: bitstring = h(Concat(Concat(Ai_165,Gb),T2)) in
+ {40}let SC_167: bitstring = sign(C2_166,x) in
+ {41}let SK_168: bitstring = h(Concat(Concat(Concat(exp(Ga_159,b_163),Ai_165),T1_162),T2)) in
+ {42}out(c, (exp(g,b_163),C2_166,T2,SC_167))
+ )
+ 
+ -- Query inj-event(serverAcUser(user[])) ==> inj-event(smAcUser(user[]))
+ Completing...
+ Starting query inj-event(serverAcUser(user[])) ==> inj-event(smAcUser(user[]))
+ RESULT inj-event(serverAcUser(user[])) ==> inj-event(smAcUser(user[])) is true.
+ -- Query inj-event(userAcServer(server[])) ==> inj-event(serverAcUser(user[]))
+ Completing...
+ Starting query inj-event(userAcServer(server[])) ==> inj-event(serverAcUser(user[]))
+ RESULT inj-event(userAcServer(server[])) ==> inj-event(serverAcUser(user[])) is true.
+ -- Query not attacker(IDi)
+ Completing...
+ Starting query not attacker(IDi)
+ RESULT not attacker(IDi) is true.
+ -- Query not attacker(SK[])
+ Completing...
+ Starting query not attacker(SK[])
+ RESULT not attacker(SK[]) is true.
+ 
+responce end
+
+

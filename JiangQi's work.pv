@@ -1,0 +1,139 @@
+(* Li's three factor scheme *)
+
+free c: channel.
+
+type pkey.
+type skey.
+type key.
+type bioInfo.
+type G.
+type exponent.
+type User.
+type Server.
+
+(*
+
+type tag.
+type ktag.
+
+
+*)
+
+(* -----------keys and roles----------- *)
+free xP: pkey.
+free SK: key[private].
+free user: User.
+free server: Server.
+
+(* -------------Constants------------- *)
+const IDi: bitstring[private].
+const PWi: bitstring[private].
+const Bi: bioInfo[private].
+const ni: bitstring.
+const x: skey[private].
+const l: bitstring.
+const Vi: bitstring.
+const KiEx: bitstring.
+
+
+
+(* -------------Events------------- *)
+event smAcUser(User).
+event serverAcUser(User).
+event userAcServer(Server).
+
+(* -----------Public key encryption----------- *)
+fun pk(skey): pkey.
+fun encrypt(bitstring, pkey): bitstring.
+reduc forall x: bitstring, y: skey; decrypt(encrypt(x,pk(y)),y) = x.
+(*-------------- Hash1 operation-------------- *)
+fun h1(bitstring): bitstring.
+(* --------------Hash2 operation-------------- *)
+fun h2(bitstring): bitstring.
+(* ----------------BH operation---------------- *)
+fun BH(bioInfo): bitstring.
+(* -------------Dot-product operation------------- *)
+fun DP(skey, pkey): bitstring.
+reduc forall x: skey, y: pkey; DPFactor(DP(x, y), x) = pk(x).
+(* -----------------XOR operation----------------- *)
+fun XOR(bitstring, bitstring): bitstring.
+reduc forall x: bitstring, y: bitstring; XORagain(XOR(x, y), y) = x.
+(* -----------------Mod operation------------------ *)
+fun Mod(bitstring, bitstring): bitstring.
+(* ----------------Concat operation---------------- *)
+fun Concat(bitstring, bitstring):bitstring.
+reduc forall x: bitstring, y: bitstring; Split(Concat(x, y)) = (x, y).
+(* -----------------Type convertion---------------- *)
+fun pkey2(pkey): bitstring.
+fun skey2(skey): bitstring.
+(* ----------------------Equation--------------------- *)
+equation forall x: skey, y: skey; DP(x, pk(y)) = DP(y, pk(x)).
+(*---------------- Diffie-Hellman---------------------- *)
+const g: G.
+fun exp(G, exponent): G.
+equation forall x: exponent, y: exponent; exp(exp(g, x), y) = exp(exp(g, y), x).
+(*------------------ Signatures --------------------------
+fun sign(G, skey): bitstring.
+fun pk(skey):pkey.
+reduc forall m: G, k: skey; getmess(sign(m,k)) = m.
+reduc forall m: G, k: skey; checksign(sign(m,k), pk(k)) = m.
+*)
+(* -------------------------query------------------------- *)
+
+query attacker(SK).
+query inj-event(userAcServer(server)) ==> inj-event(serverAcUser(user)).
+query inj-event(serverAcUser(user)) ==> inj-event(smAcUser(user)).
+
+(* ------------------------UP’s process------------------------ *)
+let processUser(IDi:bitstring, PWi:bitstring, Bi:bioInfo, Vi:bitstring, KiEx:bitstring, l:bitstring) =
+in(c, dsP: pkey);
+let ViEx = h2(Mod(h2(Concat(Concat(IDi, PWi), BH(Bi))), l)) in
+if ViEx = Vi then
+event smAcUser(user);
+new du: skey;
+let duP = pk(du) in
+let Ki = XORagain(KiEx, h1(Concat(Concat(IDi, PWi), BH(Bi)))) in
+let AIDi = XOR(IDi, h1(Concat(pkey2(duP), DP(du, dsP)))) in
+let SK = h1(Concat(Concat(IDi, Ki), DP(du, dsP))) in
+let M1 = DP(du, xP) in
+let M2 = h1(Concat(Concat(Concat(IDi, pkey2(duP)), pkey2(dsP)),
+Ki)) in
+out(c, (AIDi, M1, M2));
+in(c, M3: bitstring);
+let M3Ex = h1(Concat(Concat(Ki, pkey2(duP)), SK)) in
+if M3Ex = M3 then
+event userAcServer(server).
+
+
+(* ------------------------SP’s process------------------------ *)
+let processServer(x: skey, ni: bitstring) =
+new ds: skey;
+let dsP = pk(ds) in
+out(c, dsP);
+in(c, (AIDi: bitstring, M1: bitstring, M2: bitstring));
+let duP = DPFactor(M1, x) in
+let IDi = XORagain(M2, h1(Concat(pkey2(duP), DP(ds, duP)))) in
+let Ki = h1(Concat(Concat(IDi, skey2(x)), ni)) in
+let M2Ex= h1(Concat(Concat(Concat( IDi, pkey2(duP)), pkey2(dsP)),
+Ki)) in
+if M2 = M2Ex then
+event serverAcUser(user);
+let SK = h1(Concat(Concat(IDi, Ki), DP(ds, duP))) in
+let M3 = h1(Concat(Concat(Ki, pkey2(duP)), SK)) in
+out(c, M3).
+
+
+(* ------------------------MP’s process------------------------ *)
+process
+(* Initialization *)
+let xP = pk(x) in
+new l: bitstring;
+(* Constants stored in smart card *)
+let Ki = h1(Concat(Concat(IDi, skey2(x)), ni)) in
+new Bi: bioInfo;
+let Vi = h2(Mod(h2(Concat(Concat(IDi, PWi), BH(Bi))), l)) in
+let KiEx = XOR(Ki, h1(Concat(Concat(IDi, PWi), BH(Bi)))) in
+(
+!(processUser(IDi, PWi, Bi, Vi, KiEx, l)) |
+!(processServer(x, ni))
+)
